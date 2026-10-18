@@ -83,20 +83,26 @@ interface CheckboxProps extends Omit<ComponentProps<'input'>, 'type'> {
   description?: ReactNode
 }
 
+/** Casilla con su texto; la descripción se anuncia aparte para que el nombre sea corto. */
 export function Checkbox({ label, description, className, id, ...props }: CheckboxProps) {
+  const descriptionId = description && id ? `${id}-description` : undefined
   return (
-    <label
-      htmlFor={id}
-      className={cn(
-        'flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-surface p-3 hover:bg-surface-2',
-        className,
+    <div className={cn('rounded-xl border border-border bg-surface p-3 hover:bg-surface-2', className)}>
+      <label htmlFor={id} className="flex cursor-pointer items-start gap-3">
+        <input
+          id={id}
+          type="checkbox"
+          className="mt-0.5 size-5 shrink-0 accent-primary"
+          aria-describedby={descriptionId}
+          {...props}
+        />
+        <span className="text-sm font-medium text-fg">{label}</span>
+      </label>
+      {description && (
+        <p id={descriptionId} className="mt-0.5 pl-8 text-sm text-fg-2">
+          {description}
+        </p>
       )}
-    >
-      <input id={id} type="checkbox" className="mt-0.5 size-5 shrink-0 accent-primary" {...props} />
-      <span>
-        <span className="block text-sm font-medium text-fg">{label}</span>
-        {description && <span className="mt-0.5 block text-sm text-fg-2">{description}</span>}
-      </span>
-    </label>
+    </div>
   )
 }

@@ -1,6 +1,6 @@
 import type { FieldValues, Path, UseFormSetError } from 'react-hook-form'
 
-import { getFieldErrors } from './api'
+import { getErrorMessage, getFieldErrors } from './api'
 
 /**
  * Convierte el texto de un input a número para react-hook-form.
@@ -51,4 +51,25 @@ export function applyServerErrors<T extends FieldValues>(
     }
   }
   return applied
+}
+
+/** aria-describedby de un control: apunta al error si lo hay, si no a la ayuda. */
+export function describedBy(id: string, error?: string, hint?: unknown) {
+  if (error) return `${id}-error`
+  return hint ? `${id}-hint` : undefined
+}
+
+/**
+ * Pone en cada campo los errores de validación del backend y devuelve el
+ * mensaje general para mostrar junto al botón de guardar (por ejemplo, la
+ * regla del odómetro, que llega solo en "msg").
+ */
+export function serverErrorMessage<T extends FieldValues>(
+  error: unknown,
+  setError: UseFormSetError<T>,
+  fields: readonly Path<T>[],
+  fallback: string,
+) {
+  const applied = applyServerErrors(error, setError, fields)
+  return applied ? 'Revisa los campos marcados.' : getErrorMessage(error, fallback)
 }

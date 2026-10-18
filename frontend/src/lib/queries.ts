@@ -45,6 +45,15 @@ function cleanFilters<T extends object>(filters: T): Partial<T> {
   ) as Partial<T>
 }
 
+/**
+ * Mientras llegan los resultados de un filtro nuevo se siguen mostrando los
+ * anteriores, pero solo si son del mismo vehículo (nunca datos de otro carro).
+ */
+function keepSameVehicleData<T>(vehicleId: number | undefined) {
+  return (previous: T | undefined, previousQuery?: { queryKey: readonly unknown[] }) =>
+    previousQuery?.queryKey[1] === vehicleId ? previous : undefined
+}
+
 function invalidateVehicle(queryClient: QueryClient, vehicleId: number) {
   return queryClient.invalidateQueries({ queryKey: queryKeys.vehicle(vehicleId) })
 }
@@ -101,6 +110,7 @@ export function useMaintenanceRecords(vehicleId: number | undefined, filters: Ma
         })
       ).data,
     enabled: vehicleId != null,
+    placeholderData: keepSameVehicleData<MaintenanceRecord[]>(vehicleId),
   })
 }
 
@@ -110,6 +120,7 @@ export function useFuelLogs(vehicleId: number | undefined, filters: DateRangeFil
     queryFn: async () =>
       (await api.get<FuelLog[]>(`/vehicles/${vehicleId}/fuel`, { params: cleanFilters(filters) })).data,
     enabled: vehicleId != null,
+    placeholderData: keepSameVehicleData<FuelLog[]>(vehicleId),
   })
 }
 
