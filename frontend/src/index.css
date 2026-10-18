@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+/*
+ * Tokens de diseño. Los valores vienen de la paleta validada para gráficas
+ * (contraste y daltonismo revisados). Todo componente usa estos nombres
+ * (bg-surface, text-fg-2, bg-good...) y así el modo oscuro sale solo.
+ */
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --surface-2: #f0efec;
+  --fg: #0b0b0b;
+  --fg-2: #52514e;
+  --muted: #898781;
+  --border: #e1e0d9;
+  --border-strong: #c3c2b7;
+
+  --primary: #256abf;
+  --primary-hover: #1c5cab;
+  --primary-text: #1c5cab;
+  --primary-soft: #cde2fb;
+
+  /* Series de gráficas: orden fijo, nunca se reciclan */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+
+  /* Estados: reservados, siempre acompañados de ícono + texto */
+  --good: #0ca30c;
+  --warning: #fab219;
+  --serious: #ec835a;
+  --critical: #d03b3b;
+  --good-text: #006300;
+  --warning-text: #7a4d00;
+  --critical-text: #b02a2a;
+
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-2: #252524;
+    --fg: #f0efec;
+    --fg-2: #c3c2b7;
+    --muted: #898781;
+    --border: #2c2c2a;
+    --border-strong: #42423f;
+
+    --primary: #256abf;
+    --primary-hover: #2a78d6;
+    --primary-text: #86b6ef;
+    --primary-soft: #184f95;
+
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+
+    --good-text: #3fc23f;
+    --warning-text: #fab219;
+    --critical-text: #f08080;
+
+    --grid: #2c2c2a;
+    --axis: #383835;
+  }
+}
+
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-text: var(--primary-text);
+  --color-primary-soft: var(--primary-soft);
+  --color-series-1: var(--series-1);
+  --color-series-2: var(--series-2);
+  --color-series-3: var(--series-3);
+  --color-good: var(--good);
+  --color-warning: var(--warning);
+  --color-serious: var(--serious);
+  --color-critical: var(--critical);
+  --color-good-text: var(--good-text);
+  --color-warning-text: var(--warning-text);
+  --color-critical-text: var(--critical-text);
+  --color-grid: var(--grid);
+  --color-axis: var(--axis);
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-page font-sans text-fg antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--primary-text);
+    outline-offset: 2px;
+  }
+
+  dialog::backdrop {
+    background: rgb(0 0 0 / 0.5);
+  }
+}
