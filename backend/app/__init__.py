@@ -1,6 +1,7 @@
 """SmartCar API: aquí se arma la aplicación (patrón application factory)."""
 from flask import Flask
 
+from app import models  # noqa: F401  (registra las tablas para las migraciones)
 from app.config import Config
 from app.errors import register_error_handlers
 from app.extensions import cors, db, jwt, migrate
