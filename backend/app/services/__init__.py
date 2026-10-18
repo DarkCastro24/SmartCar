@@ -1,11 +1,14 @@
 from app.extensions import db
 from app.repositories import (
     FuelRepository,
+    IntervalRepository,
     MaintenanceRepository,
     UserRepository,
     VehicleRepository,
 )
 from app.services.auth_service import AuthService
+from app.services.dashboard_service import DashboardService
+from app.services.interval_service import IntervalService
 from app.services.record_service import FuelService, MaintenanceService
 from app.services.vehicle_service import VehicleService
 
@@ -20,9 +23,14 @@ def register_services(app):
     vehicles = VehicleRepository(session)
     maintenance = MaintenanceRepository(session)
     fuel = FuelRepository(session)
+    intervals = IntervalRepository(session)
     all_records = (maintenance, fuel)
 
     app.auth_service = AuthService(users)
     app.vehicle_service = VehicleService(vehicles)
     app.maintenance_service = MaintenanceService(maintenance, app.vehicle_service, all_records)
     app.fuel_service = FuelService(fuel, app.vehicle_service, all_records)
+    app.interval_service = IntervalService(app.vehicle_service, intervals)
+    app.dashboard_service = DashboardService(
+        app.vehicle_service, app.interval_service, maintenance, fuel
+    )
