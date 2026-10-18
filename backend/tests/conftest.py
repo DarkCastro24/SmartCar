@@ -35,3 +35,14 @@ def make_user(app):
 @pytest.fixture
 def auth_headers(make_user):
     return make_user()[1]
+
+
+@pytest.fixture
+def vehicle_id(client, auth_headers):
+    """Crea un vehículo del usuario de prueba y devuelve su id."""
+    res = client.post(
+        "/api/vehicles",
+        json={"make": "Toyota", "model": "Corolla", "year": 2018, "initial_mileage": 40000},
+        headers=auth_headers,
+    )
+    return res.get_json()["id"]
