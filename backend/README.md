@@ -241,7 +241,7 @@ Revisa el archivo generado antes de aplicarlo.
 1. **Base de datos (Neon o Supabase):** crea un proyecto PostgreSQL y copia la cadena de
    conexión. Va tal cual en `DATABASE_URL`; la app la adapta sola.
 2. **API (Render)** → *New Web Service* → conecta tu repositorio y configura:
-   - Root Directory: `SmartCar/backend`
+   - Root Directory: `backend`
    - Build Command: `pip install -r requirements.txt && flask db upgrade`
    - Start Command: `gunicorn wsgi:app`
    - Health Check Path: `/api/health`
@@ -254,7 +254,6 @@ después de un rato puede tardar cerca de un minuto.
 
 ---
 
-## 8. Siguiente paso
+## 8. El frontend
 
-El frontend: React + Vite + TypeScript como PWA, con `@react-oauth/google` para el
-login y Recharts para las gráficas de `/stats`.
+La app web (React como PWA) que consume esta API está en [`../frontend`](../frontend/README.md).

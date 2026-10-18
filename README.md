@@ -23,6 +23,11 @@ PWA en el cel ┘            (Render)      (Neon / Supabase)
 | Carpeta | Tecnología | Estado |
 |---|---|---|
 | [`backend/`](backend/) | Flask, SQLAlchemy, JWT, login con Google | ✅ Listo |
-| `frontend/` | React + Vite + TypeScript como PWA | Próximo paso |
+| [`frontend/`](frontend/) | React + Vite + TypeScript como PWA instalable | ✅ Listo |
 
-La guía paso a paso del backend está en [backend/README.md](backend/README.md).
+## Empezar
+
+1. **Backend:** [backend/README.md](backend/README.md) (Python, PostgreSQL y login con Google).
+2. **Frontend:** [frontend/README.md](frontend/README.md) (Node.js y la app web).
+
+Cada push corre las pruebas de ambos con GitHub Actions (`.github/workflows/ci.yml`).
