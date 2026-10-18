@@ -1,0 +1,106 @@
+# Peticiones de prueba para la extensión "REST Client" de VS Code.
+#  1. Arranca la API:            flask run --debug
+#  2. Datos de ejemplo:          flask seed-demo tu_correo@gmail.com
+#  3. Obtén un token:            flask dev-token tu_correo@gmail.com
+#  4. Pega el token en @token y pulsa "Send Request" sobre cada petición.
+
+@base = http://127.0.0.1:5000/api
+@token = PEGA_AQUI_TU_TOKEN
+@vehicle = 1
+
+### Estado de la API
+GET {{base}}/health
+
+### Mi usuario
+GET {{base}}/auth/me
+Authorization: Bearer {{token}}
+
+### Tipos de mantenimiento
+GET {{base}}/maintenance-types
+
+### ---------- Vehículos ----------
+
+### Mis vehículos
+GET {{base}}/vehicles
+Authorization: Bearer {{token}}
+
+### Registrar vehículo
+POST {{base}}/vehicles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "make": "Honda",
+  "model": "Civic",
+  "year": 2020,
+  "plate": "P987-654",
+  "color": "Azul",
+  "initial_mileage": 30000
+}
+
+### Editar vehículo
+PUT {{base}}/vehicles/{{vehicle}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "color": "Negro" }
+
+### ---------- Registrar ----------
+# Ajusta fecha y millas a tus datos: el odómetro no puede retroceder.
+
+### Registrar cambio de aceite
+POST {{base}}/vehicles/{{vehicle}}/maintenance
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "oil_change",
+  "date": "2026-10-17",
+  "mileage": 63000,
+  "cost": 45.00,
+  "notes": "Aceite 5W-30 sintético"
+}
+
+### Registrar carga de combustible
+POST {{base}}/vehicles/{{vehicle}}/fuel
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "date": "2026-10-18",
+  "mileage": 63150,
+  "gallons": 9.5,
+  "total_cost": 38.40,
+  "full_tank": true
+}
+
+### ---------- Consultar ----------
+
+### Cambios de aceite de este año
+GET {{base}}/vehicles/{{vehicle}}/maintenance?type=oil_change&from=2026-01-01
+Authorization: Bearer {{token}}
+
+### Cargas de combustible
+GET {{base}}/vehicles/{{vehicle}}/fuel
+Authorization: Bearer {{token}}
+
+### ---------- Estado general ----------
+
+### Semáforo de mantenimientos
+GET {{base}}/vehicles/{{vehicle}}/status
+Authorization: Bearer {{token}}
+
+### Rendimiento y gastos
+GET {{base}}/vehicles/{{vehicle}}/stats
+Authorization: Bearer {{token}}
+
+### Intervalos de mantenimiento
+GET {{base}}/vehicles/{{vehicle}}/intervals
+Authorization: Bearer {{token}}
+
+### Cambiar el intervalo del aceite a 7,500 millas
+PUT {{base}}/vehicles/{{vehicle}}/intervals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+[{ "type": "oil_change", "every_miles": 7500, "every_months": 6 }]

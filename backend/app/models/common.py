@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 
 def utcnow():
-    return dt.datetime.now(dt.timezone.utc)
+    return dt.datetime.now(dt.UTC)
 
 
 def iso(value):

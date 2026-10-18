@@ -1,8 +1,15 @@
+from typing import TYPE_CHECKING
+
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.extensions import db
 from app.models.common import TimestampMixin, iso
+
+if TYPE_CHECKING:  # solo para el editor y linters; evita imports circulares
+    from app.models.fuel import FuelLog
+    from app.models.maintenance import MaintenanceInterval, MaintenanceRecord
+    from app.models.user import User
 
 
 class Vehicle(TimestampMixin, db.Model):

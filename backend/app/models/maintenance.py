@@ -1,12 +1,16 @@
 import datetime as dt
 import enum
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Enum, ForeignKey, Numeric, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.extensions import db
 from app.models.common import TimestampMixin, iso, money
+
+if TYPE_CHECKING:  # solo para el editor y linters; evita imports circulares
+    from app.models.vehicle import Vehicle
 
 
 class MaintenanceType(enum.StrEnum):

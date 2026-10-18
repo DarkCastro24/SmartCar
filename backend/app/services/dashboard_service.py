@@ -81,7 +81,7 @@ class DashboardService:
         fuel = self.fuel.list_for_vehicle(vehicle.id, oldest_first=True)
         series = mpg_series(fuel)
 
-        # Millas entre el primer y el último registro (ahí es donde se registraron gastos)
+        # Millas entre el primer y el último registro
         readings = [r.mileage for r in maintenance] + [f.mileage for f in fuel]
         miles_tracked = max(readings) - min(readings) if readings else 0
 
@@ -89,7 +89,9 @@ class DashboardService:
         priced_fuel = [f for f in fuel if f.total_cost is not None]
         fuel_total = sum(float(f.total_cost) for f in priced_fuel)
         priced_gallons = sum(float(f.gallons) for f in priced_fuel)
-        total = maintenance_total + fuel_total
+        price_per_gallon = fuel_total / priced_gallons if priced_gallons else None
+        series_gallons = sum(s["gallons"] for s in series)
+        miles_per_gallon = sum(s["miles"] for s in series) / series_gallons if series_gallons else None
 
         events = [
             {
@@ -113,16 +115,19 @@ class DashboardService:
                 "last_mpg": series[-1]["mpg"] if series else None,
                 "best_mpg": max((s["mpg"] for s in series), default=None),
                 "worst_mpg": min((s["mpg"] for s in series), default=None),
-                "avg_price_per_gallon": (
-                    round(fuel_total / priced_gallons, 3) if priced_gallons else None
+                "avg_price_per_gallon": round(price_per_gallon, 3) if price_per_gallon else None,
+                # Cuánto cuesta en combustible recorrer una milla: precio por galón / MPG
+                "cost_per_mile": (
+                    round(price_per_gallon / miles_per_gallon, 3)
+                    if price_per_gallon and miles_per_gallon
+                    else None
                 ),
                 "mpg_series": series,
             },
             "costs": {
                 "maintenance_total": round(maintenance_total, 2),
                 "fuel_total": round(fuel_total, 2),
-                "total": round(total, 2),
-                "cost_per_mile": round(total / miles_tracked, 3) if miles_tracked else None,
+                "total": round(maintenance_total + fuel_total, 2),
                 "by_month": monthly_costs(maintenance, fuel),
             },
             # MPG antes y después de cada mantenimiento (para marcarlos en la gráfica)

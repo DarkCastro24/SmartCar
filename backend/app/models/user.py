@@ -1,10 +1,14 @@
 import datetime as dt
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.extensions import db
 from app.models.common import TimestampMixin, iso
+
+if TYPE_CHECKING:  # solo para el editor y linters; evita imports circulares
+    from app.models.vehicle import Vehicle
 
 
 class User(TimestampMixin, db.Model):

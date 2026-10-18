@@ -14,6 +14,7 @@ from app.services import register_services
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    app.json.ensure_ascii = False  # "Batería" en vez de "Bater\u00eda"
 
     if not app.config.get("JWT_SECRET_KEY"):
         raise RuntimeError("Falta JWT_SECRET_KEY. Copia .env.example como .env y complétalo.")

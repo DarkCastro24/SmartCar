@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint
 from sqlalchemy import text
 
 from app.extensions import db

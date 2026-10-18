@@ -84,3 +84,21 @@ def test_comando_dev_token(app):
     assert result.exit_code == 0
     assert "Authorization: Bearer " in result.output
     assert User.query.filter_by(email="prueba@example.com").count() == 1
+
+
+def test_comando_seed_demo_crea_datos_validos(app, make_user):
+    result = app.test_cli_runner().invoke(args=["seed-demo", "demo@example.com"])
+    assert result.exit_code == 0, result.output
+
+    _, headers = make_user("demo@example.com")
+    client = app.test_client()
+    [vehicle] = client.get("/api/vehicles", headers=headers).get_json()
+    status = client.get(f"/api/vehicles/{vehicle['id']}/status", headers=headers).get_json()
+    items = {item["type"]: item["status"] for item in status["items"]}
+    assert items["air_filter"] == "vencido"
+    assert items["battery"] == "proximo"
+    assert "sin_registro" not in items.values()
+
+    stats = client.get(f"/api/vehicles/{vehicle['id']}/stats", headers=headers).get_json()
+    plugs = next(i for i in stats["maintenance_impact"] if i["type"] == "spark_plugs")
+    assert plugs["change_pct"] > 0  # el rendimiento mejora después de las bujías

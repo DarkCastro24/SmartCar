@@ -74,8 +74,8 @@ def test_estadisticas(client, auth_headers, vehicle_id):
     assert stats["fuel"]["avg_mpg"] == 33.3  # 600 millas / 18 galones
     assert stats["fuel"]["best_mpg"] == 37.5
     assert stats["fuel"]["avg_price_per_gallon"] == 4.0
+    assert stats["fuel"]["cost_per_mile"] == 0.12  # $4.00 por galón / 33.3 MPG
     assert stats["costs"]["total"] == 232.0
-    assert stats["costs"]["cost_per_mile"] == 0.387
     assert [m["month"] for m in stats["costs"]["by_month"]] == ["2025-01", "2025-02"]
 
     [impact] = stats["maintenance_impact"]

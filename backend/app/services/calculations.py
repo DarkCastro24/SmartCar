@@ -6,6 +6,7 @@ datos, así se pueden probar fácilmente (ver tests/test_calculations.py).
 import calendar
 import datetime as dt
 from collections import defaultdict
+from itertools import pairwise
 
 from app.models import MAINTENANCE_LABELS
 
@@ -156,7 +157,7 @@ def maintenance_cycles(records):
                 "miles": b.mileage - a.mileage,
                 "days": (b.date - a.date).days,
             }
-            for a, b in zip(items, items[1:])
+            for a, b in pairwise(items)
         ]
         result.append(
             {
