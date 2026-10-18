@@ -1,0 +1,26 @@
+"""Extensiones de Flask. Se crean aquí y se conectan a la app en create_app()."""
+from flask_cors import CORS
+from flask_jwt_extended import JWTManager
+from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import MetaData
+from sqlalchemy.orm import DeclarativeBase
+
+# Nombres predecibles para índices y llaves; Alembic los necesita para las migraciones
+NAMING_CONVENTION = {
+    "ix": "ix_%(column_0_label)s",
+    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s",
+}
+
+
+class Base(DeclarativeBase):
+    metadata = MetaData(naming_convention=NAMING_CONVENTION)
+
+
+db = SQLAlchemy(model_class=Base)
+migrate = Migrate()
+jwt = JWTManager()
+cors = CORS()
