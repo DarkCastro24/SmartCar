@@ -4,7 +4,7 @@ import type { ComponentProps, ReactNode } from 'react'
 import { cn } from './cn'
 
 const controlClass = cn(
-  'w-full rounded-xl border border-border bg-surface px-3 text-base text-fg placeholder:text-muted',
+  'w-full rounded-xl border border-muted bg-surface px-3 text-base text-fg placeholder:text-muted',
   'transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25',
   'aria-[invalid=true]:border-critical aria-[invalid=true]:focus:ring-critical/25',
   'disabled:cursor-not-allowed disabled:opacity-60',

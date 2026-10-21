@@ -15,7 +15,7 @@ export function VehicleSwitcher({ className }: { className?: string }) {
     return (
       <Link
         to="/registrar?tipo=vehiculo"
-        className={cn('inline-flex h-9 items-center gap-2 rounded-xl px-3 text-sm font-medium text-primary-text hover:bg-surface-2', className)}
+        className={cn('inline-flex h-11 items-center gap-2 rounded-xl px-3 text-sm font-medium text-primary-text hover:bg-surface-2 sm:h-9', className)}
       >
         <Car aria-hidden className="size-4" />
         Agregar vehículo
@@ -34,7 +34,7 @@ export function VehicleSwitcher({ className }: { className?: string }) {
           id="vehicle-switcher"
           value={vehicle.id}
           onChange={(event) => selectVehicle(Number(event.target.value))}
-          className="h-9 w-full max-w-[13rem] cursor-pointer appearance-none truncate rounded-xl border border-border bg-surface pl-8 pr-3 text-sm font-medium text-fg hover:bg-surface-2 focus:border-primary focus:outline-none sm:max-w-[16rem]"
+          className="h-11 w-full max-w-[13rem] cursor-pointer appearance-none truncate rounded-xl border border-border bg-surface pl-8 pr-3 text-sm font-medium text-fg hover:bg-surface-2 focus:border-primary focus:outline-none sm:h-9 sm:max-w-[16rem]"
         >
           {vehicles.map((item) => (
             <option key={item.id} value={item.id}>
@@ -47,7 +47,7 @@ export function VehicleSwitcher({ className }: { className?: string }) {
         to="/vehiculos"
         aria-label="Administrar vehículos"
         title="Administrar vehículos"
-        className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-fg-2 hover:bg-surface-2 hover:text-fg"
+        className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl text-fg-2 hover:bg-surface-2 hover:text-fg sm:size-9"
       >
         <Settings2 aria-hidden className="size-4" />
       </Link>

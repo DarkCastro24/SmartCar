@@ -18,6 +18,7 @@ export function Button({
   className,
   children,
   disabled,
+  onClick,
   type = 'button',
   ...props
 }: ButtonProps) {
@@ -25,8 +26,19 @@ export function Button({
     <button
       type={type}
       className={buttonClasses(variant, size, className)}
-      disabled={disabled || loading}
+      // Mientras carga no se usa `disabled`: el navegador le quitaría el foco y
+      // lo mandaría a <body>. aria-disabled + preventDefault bloquean el clic y
+      // también el envío con Enter (que dispara un clic en el botón de enviar).
+      disabled={disabled}
+      aria-disabled={loading || undefined}
       aria-busy={loading || undefined}
+      onClick={(event) => {
+        if (loading) {
+          event.preventDefault()
+          return
+        }
+        onClick?.(event)
+      }}
       {...props}
     >
       {loading ? <Spinner className="size-4" /> : icon}

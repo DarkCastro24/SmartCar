@@ -25,7 +25,8 @@ function VehicleDashboard({ vehicle }: { vehicle: Vehicle }) {
   const stats = useVehicleStats(vehicle.id)
 
   if (status.isPending) return <LoadingState label="Calculando el estado del vehículo…" />
-  if (status.isError) {
+  // Si falla solo un refresco (mala señal al volver a la app), se siguen mostrando los datos que ya había
+  if (!status.data) {
     return <ErrorState error={status.error} title="No se pudo cargar el estado" onRetry={() => status.refetch()} />
   }
 
@@ -36,7 +37,7 @@ function VehicleDashboard({ vehicle }: { vehicle: Vehicle }) {
 
       {stats.isPending ? (
         <LoadingState label="Cargando estadísticas…" />
-      ) : stats.isError ? (
+      ) : !stats.data ? (
         <ErrorState error={stats.error} title="No se pudieron cargar las estadísticas" onRetry={() => stats.refetch()} />
       ) : (
         <>

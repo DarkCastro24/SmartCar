@@ -51,9 +51,13 @@ export function getErrorMessage(error: unknown, fallback = 'Ocurrió un error in
     if (!error.response) {
       return 'No se pudo conectar con el servidor. Revisa tu conexión.'
     }
+    // Un 5xx trae la descripción en inglés de Flask o el HTML del proxy (Render reiniciando)
+    if (error.response.status >= 500) return 'El servidor tuvo un problema. Intenta de nuevo en un momento.'
     const body = error.response.data as ApiErrorBody | undefined
-    if (body?.msg) return body.msg
+    // Nunca el error.message de axios ("Request failed with status code 404")
+    return body?.msg || fallback
   }
+  // Errores propios de la app, como el de loginWithToken
   if (error instanceof Error && error.message) return error.message
   return fallback
 }
@@ -73,6 +77,11 @@ export function getFieldErrors(error: unknown): Record<string, string> {
     else if (typeof messages === 'string') result[field] = messages
   }
   return result
+}
+
+/** La API respondió 401: el interceptor ya cerró la sesión y avisó al usuario. */
+export function isUnauthorized(error: unknown) {
+  return error instanceof AxiosError && error.response?.status === 401
 }
 
 export function isNotFound(error: unknown) {

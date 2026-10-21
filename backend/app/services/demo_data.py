@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from app.extensions import db
 from app.models import FuelLog, MaintenanceRecord, MaintenanceType, Vehicle
+from app.services.clock import local_today
 
 COSTS = {
     MaintenanceType.OIL_CHANGE: 45,
@@ -22,7 +23,7 @@ def create_demo_vehicle(user, today=None):
     El rendimiento mejora después del cambio de bujías para que se note en las gráficas.
     """
     rng = random.Random(42)  # siempre los mismos datos
-    today = today or dt.date.today()
+    today = today or local_today()
     start = today - dt.timedelta(days=365)
     spark_plugs_day = start + dt.timedelta(days=180)
 

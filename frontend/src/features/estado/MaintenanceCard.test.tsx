@@ -33,8 +33,8 @@ describe('<MaintenanceCard>', () => {
 
     expect(screen.getByRole('heading', { name: 'Filtro de aire' })).toBeInTheDocument()
     expect(screen.getByText('Vencido')).toBeInTheDocument()
-    expect(screen.getByText('Vencido hace 1,200 mi')).toBeInTheDocument()
-    expect(screen.getByText('Tocaba el 18 sept 2026 o a las 66,700 mi')).toBeInTheDocument()
+    expect(screen.getByText('Te pasaste por 1,200 mi')).toBeInTheDocument()
+    expect(screen.getByText('Tocaba a las 66,700 mi')).toBeInTheDocument()
 
     const meter = screen.getByRole('meter', { name: 'Avance del intervalo' })
     expect(meter).toHaveAttribute('aria-valuenow', '100')

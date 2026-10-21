@@ -27,7 +27,8 @@ export function VehicleProvider({ children }: { children: ReactNode }) {
       // Si el elegido ya no existe (se borró), se usa el primero
       vehicle: vehicles.find((v) => v.id === selectedId) ?? vehicles[0] ?? null,
       isLoading: query.isPending,
-      error: query.error,
+      // Si falla solo un refresco, se siguen usando los vehículos que ya había
+      error: query.data ? null : query.error,
       refetch: () => void refetch(),
       selectVehicle,
     }

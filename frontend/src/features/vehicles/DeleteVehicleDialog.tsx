@@ -1,7 +1,7 @@
 import { toast } from 'sonner'
 
 import { ConfirmDialog } from '../../components/ui/Dialog'
-import { getErrorMessage } from '../../lib/api'
+import { getErrorMessage, isUnauthorized } from '../../lib/api'
 import { vehicleName } from '../../lib/format'
 import { useDeleteVehicle } from '../../lib/queries'
 import type { Vehicle } from '../../lib/types'
@@ -12,20 +12,28 @@ interface DeleteVehicleDialogProps {
   /** Si se borra el vehículo activo, el que lo reemplaza (para avisarlo). */
   nextActive?: Vehicle | null
   onClose: () => void
+  /** Se llama con el id borrado; cierra el diálogo solo si sigue mostrando ese vehículo. */
+  onDeleted: (id: number) => void
 }
 
-export function DeleteVehicleDialog({ vehicle, nextActive, onClose }: DeleteVehicleDialogProps) {
+export function DeleteVehicleDialog({ vehicle, nextActive, onClose, onDeleted }: DeleteVehicleDialogProps) {
   const deleteMutation = useDeleteVehicle()
   const name = vehicle ? vehicleName(vehicle) : ''
 
   function confirm() {
     if (!vehicle) return
-    deleteMutation.mutate(vehicle.id, {
+    // Si el diálogo se cierra (Escape) mientras se borra y se abre otro, al
+    // terminar solo se cierra el de este vehículo
+    const target = vehicle
+    deleteMutation.mutate(target.id, {
       onSuccess: () => {
-        toast.success('Vehículo eliminado', { description: name })
-        onClose()
+        toast.success('Vehículo eliminado', { description: vehicleName(target) })
+        onDeleted(target.id)
       },
-      onError: (error) => toast.error(getErrorMessage(error, 'No se pudo eliminar el vehículo.')),
+      onError: (error) => {
+        if (isUnauthorized(error)) return
+        toast.error(getErrorMessage(error, 'No se pudo eliminar el vehículo.'))
+      },
     })
   }
 
@@ -34,7 +42,7 @@ export function DeleteVehicleDialog({ vehicle, nextActive, onClose }: DeleteVehi
       open={vehicle !== null}
       onClose={onClose}
       onConfirm={confirm}
-      loading={deleteMutation.isPending}
+      loading={deleteMutation.isPending && deleteMutation.variables === vehicle?.id}
       title="¿Eliminar este vehículo?"
       confirmLabel="Eliminar vehículo"
       description={

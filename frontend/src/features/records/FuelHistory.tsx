@@ -4,7 +4,8 @@ import { toast } from 'sonner'
 
 import { ConfirmDialog, Dialog } from '../../components/ui/Dialog'
 import { ErrorState, LoadingState } from '../../components/ui/States'
-import { getErrorMessage } from '../../lib/api'
+import { cn } from '../../components/ui/cn'
+import { getErrorMessage, isUnauthorized } from '../../lib/api'
 import { formatDate, formatGallons, formatMiles, formatMoney } from '../../lib/format'
 import { useDeleteFuelLog, useFuelLogs } from '../../lib/queries'
 import type { DateRangeFilters, FuelLog } from '../../lib/types'
@@ -29,17 +30,23 @@ export function FuelHistory({ vehicleId, filters, onClearFilters }: FuelHistoryP
   const filtered = hasActiveFilters(filters)
 
   function confirmDelete() {
-    if (!deleting) return
+    // Si mientras se borra se cierra el diálogo (Escape) y se abre el de otra
+    // carga, al terminar solo se cierra el de esta
+    const target = deleting
+    if (!target) return
     deleteMutation.mutate(
-      { id: deleting.id, vehicleId },
+      { id: target.id, vehicleId },
       {
         onSuccess: () => {
           toast.success('Carga eliminada', {
-            description: `${formatDate(deleting.date)} · ${formatGallons(deleting.gallons)}`,
+            description: `${formatDate(target.date)} · ${formatGallons(target.gallons)}`,
           })
-          setDeleting(null)
+          setDeleting((current) => (current?.id === target.id ? null : current))
         },
-        onError: (error) => toast.error(getErrorMessage(error, 'No se pudo eliminar la carga.')),
+        onError: (error) => {
+          if (isUnauthorized(error)) return
+          toast.error(getErrorMessage(error, 'No se pudo eliminar la carga.'))
+        },
       },
     )
   }
@@ -47,7 +54,8 @@ export function FuelHistory({ vehicleId, filters, onClearFilters }: FuelHistoryP
   let content: ReactNode
   if (query.isPending) {
     content = <LoadingState label="Cargando cargas de combustible…" />
-  } else if (query.error) {
+  } else if (!query.data) {
+    // Si falla solo un refresco, se siguen mostrando los datos que ya había
     content = <ErrorState error={query.error} onRetry={() => void query.refetch()} />
   } else if (query.data.length === 0) {
     content = (
@@ -63,9 +71,16 @@ export function FuelHistory({ vehicleId, filters, onClearFilters }: FuelHistoryP
     )
   } else {
     const listProps = { logs: query.data, onEdit: setEditing, onDelete: setDeleting }
+    // Mientras llegan los resultados del filtro nuevo se ven los anteriores: atenuados
+    // y sin un resumen "de lo filtrado" que no corresponde
+    const updating = query.isPlaceholderData
     content = (
-      <div className="space-y-4">
-        <HistorySummary summary={summarizeFuel(query.data)} filtered={filtered} />
+      <div className={cn('space-y-4', updating && 'pointer-events-none opacity-60 transition-opacity')} aria-busy={updating || undefined}>
+        {updating ? (
+          <LoadingState label="Aplicando filtros…" className="py-3" />
+        ) : (
+          <HistorySummary summary={summarizeFuel(query.data)} filtered={filtered} />
+        )}
         <FuelCards {...listProps} />
         <FuelTable {...listProps} />
       </div>
@@ -81,7 +96,7 @@ export function FuelHistory({ vehicleId, filters, onClearFilters }: FuelHistoryP
           <FuelForm
             vehicleId={vehicleId}
             log={editing}
-            onSaved={() => setEditing(null)}
+            onSaved={(saved) => setEditing((current) => (current?.id === saved.id ? null : current))}
             onCancel={() => setEditing(null)}
           />
         )}
@@ -91,7 +106,7 @@ export function FuelHistory({ vehicleId, filters, onClearFilters }: FuelHistoryP
         open={deleting !== null}
         onClose={() => setDeleting(null)}
         onConfirm={confirmDelete}
-        loading={deleteMutation.isPending}
+        loading={deleteMutation.isPending && deleteMutation.variables?.id === deleting?.id}
         title="¿Eliminar esta carga?"
         description={
           deleting && (
@@ -153,7 +168,10 @@ function FuelTable({ logs, onEdit, onDelete }: ListProps) {
           <Th align="right">Millaje</Th>
           <Th align="right">Galones</Th>
           <Th align="right">Total</Th>
-          <Th align="right">Precio/gal</Th>
+          {/* Entre md y lg la tabla no cabe: sin esta columna el botón Eliminar queda a la vista */}
+          <Th align="right" className="hidden lg:table-cell">
+            Precio/gal
+          </Th>
           <Th>Tanque</Th>
           <Th>
             <span className="sr-only">Acciones</span>
@@ -178,7 +196,9 @@ function FuelTable({ logs, onEdit, onDelete }: ListProps) {
             {formatGallons(log.gallons)}
           </Td>
           <Td align="right">{formatMoney(log.total_cost)}</Td>
-          <Td align="right">{formatMoney(log.price_per_gallon)}</Td>
+          <Td align="right" className="hidden lg:table-cell">
+            {formatMoney(log.price_per_gallon)}
+          </Td>
           <Td>
             <TankBadge full={log.full_tank} />
           </Td>

@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 
 import { Button } from '../../components/ui/Button'
 import { ErrorState, LoadingState } from '../../components/ui/States'
-import { getErrorMessage } from '../../lib/api'
+import { getErrorMessage, isUnauthorized } from '../../lib/api'
 import { MAINTENANCE_META } from '../../lib/maintenance'
 import { useIntervals, useMaintenanceTypes, useResetInterval, useSaveIntervals } from '../../lib/queries'
 import type { Interval, MaintenanceType } from '../../lib/types'
@@ -74,6 +74,7 @@ function IntervalsForm({ vehicleId, saved, onSaved, onCancel }: IntervalsFormPro
       })
       onSaved?.()
     } catch (error) {
+      if (isUnauthorized(error)) return // AuthProvider ya avisa y lleva al login
       setFormError(getErrorMessage(error, 'No se pudieron guardar los intervalos.'))
     }
   }
@@ -91,6 +92,7 @@ function IntervalsForm({ vehicleId, saved, onSaved, onCancel }: IntervalsFormPro
         description: `${row.label}: ${describeInterval(row.every_miles, row.every_months)}`,
       })
     } catch (error) {
+      if (isUnauthorized(error)) return
       toast.error(getErrorMessage(error, 'No se pudo restablecer el intervalo.'))
     }
   }

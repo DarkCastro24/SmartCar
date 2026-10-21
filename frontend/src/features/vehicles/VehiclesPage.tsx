@@ -23,6 +23,12 @@ export default function VehiclesPage() {
   const navigate = useNavigate()
   const [dialog, setDialog] = useState<OpenDialog>(null)
   const close = () => setDialog(null)
+  // Al terminar de guardar o borrar se cierra solo el diálogo de ese vehículo: si
+  // mientras tanto se abrió otro (Escape durante el guardado), ese sigue abierto
+  const closeIf = (kind: 'add' | 'edit' | 'intervals' | 'delete', id?: number) =>
+    setDialog((current) =>
+      current && current.kind === kind && (current.kind === 'add' || current.vehicle.id === id) ? null : current,
+    )
   const target = dialog && dialog.kind !== 'add' ? dialog.vehicle : null
   const hasVehicles = vehicles.length > 0
 
@@ -93,11 +99,11 @@ export default function VehiclesPage() {
         title="Agregar vehículo"
         description="Solo la marca y el modelo son obligatorios."
       >
-        <VehicleForm onSaved={close} onCancel={close} />
+        <VehicleForm onSaved={() => closeIf('add')} onCancel={close} />
       </Dialog>
 
       <Dialog open={dialog?.kind === 'edit'} onClose={close} title="Editar vehículo" description={target && vehicleName(target)}>
-        {target && <VehicleForm vehicle={target} onSaved={close} onCancel={close} />}
+        {target && <VehicleForm vehicle={target} onSaved={(saved) => closeIf('edit', saved.id)} onCancel={close} />}
       </Dialog>
 
       <Dialog
@@ -106,10 +112,17 @@ export default function VehiclesPage() {
         title="Intervalos de mantenimiento"
         description={target && vehicleName(target)}
       >
-        {target && <IntervalsEditor vehicleId={target.id} onSaved={close} onCancel={close} />}
+        {target && (
+          <IntervalsEditor vehicleId={target.id} onSaved={() => closeIf('intervals', target.id)} onCancel={close} />
+        )}
       </Dialog>
 
-      <DeleteVehicleDialog vehicle={dialog?.kind === 'delete' ? target : null} nextActive={nextActive} onClose={close} />
+      <DeleteVehicleDialog
+        vehicle={dialog?.kind === 'delete' ? target : null}
+        nextActive={nextActive}
+        onClose={close}
+        onDeleted={(id) => closeIf('delete', id)}
+      />
     </>
   )
 }

@@ -1,4 +1,3 @@
-import datetime as dt
 from collections import Counter
 
 from app.models import MAINTENANCE_LABELS, MaintenanceType
@@ -12,6 +11,7 @@ from app.services.calculations import (
     mpg_series,
     overall_status,
 )
+from app.services.clock import local_today
 
 
 class DashboardService:
@@ -34,7 +34,7 @@ class DashboardService:
 
     def status(self, user_id, vehicle_id, today=None):
         vehicle = self.vehicles.get(user_id, vehicle_id)
-        today = today or dt.date.today()
+        today = today or local_today()
         mileage = self.current_mileage(vehicle)
         intervals = self.intervals.for_vehicle(vehicle)
         latest = self.maintenance.latest_by_type(vehicle.id)

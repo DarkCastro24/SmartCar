@@ -18,8 +18,10 @@ function readStoredUser(): User | null {
   }
 }
 
-/** Acepta "eyJ...", "Bearer eyJ..." o la línea completa que imprime `flask dev-token`. */
+/** Acepta "eyJ...", "Bearer eyJ..." o todo lo que imprime `flask dev-token` (dos líneas). */
 function cleanToken(raw: string) {
+  const jwt = raw.match(/eyJ[\w-]+\.[\w-]+\.[\w-]+/)
+  if (jwt) return jwt[0]
   return raw
     .trim()
     .replace(/^Authorization:\s*/i, '')
@@ -56,6 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     (reason?: 'expired') => {
       writeStorage(STORAGE_KEYS.token, null)
       writeStorage(STORAGE_KEYS.user, null)
+      // El vehículo elegido es del usuario que sale
+      writeStorage(STORAGE_KEYS.vehicleId, null)
       setAuthToken(null)
       setToken(null)
       setStoredUser(null)
@@ -64,6 +68,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     [queryClient],
   )
+
+  // Si se cierra o se cambia la sesión en otra pestaña (o en la PWA), esta la sigue
+  useEffect(() => {
+    function onStorage(event: StorageEvent) {
+      // key null = localStorage.clear()
+      if (event.key !== null && event.key !== STORAGE_KEYS.token) return
+      const next = readStorage(STORAGE_KEYS.token)
+      if (next === token) return
+      if (next === null) {
+        setAuthToken(null)
+        setToken(null)
+        setStoredUser(null)
+        queryClient.clear()
+      } else {
+        // Entró otra cuenta (o se inició sesión): recargar descarta todo lo de la anterior
+        window.location.reload()
+      }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [token, queryClient])
 
   // Si la API responde 401 en cualquier pantalla, se cierra la sesión
   useEffect(() => {

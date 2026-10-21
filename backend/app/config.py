@@ -31,6 +31,8 @@ class Config:
 
     GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
     CORS_ORIGINS = split_csv(os.getenv("FRONTEND_URL", "http://localhost:5173"))
+    # Zona horaria de los usuarios: define qué día es "hoy" (el servidor puede estar en UTC)
+    APP_TIMEZONE = os.getenv("APP_TIMEZONE", "America/El_Salvador")
 
 
 class TestConfig(Config):

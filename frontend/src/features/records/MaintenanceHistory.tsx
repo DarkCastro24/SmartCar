@@ -4,7 +4,8 @@ import { toast } from 'sonner'
 
 import { ConfirmDialog, Dialog } from '../../components/ui/Dialog'
 import { ErrorState, LoadingState } from '../../components/ui/States'
-import { getErrorMessage } from '../../lib/api'
+import { cn } from '../../components/ui/cn'
+import { getErrorMessage, isUnauthorized } from '../../lib/api'
 import { formatDate, formatMiles, formatMoney } from '../../lib/format'
 import { MAINTENANCE_META } from '../../lib/maintenance'
 import { useDeleteMaintenance, useMaintenanceRecords } from '../../lib/queries'
@@ -30,15 +31,21 @@ export function MaintenanceHistory({ vehicleId, filters, onClearFilters }: Maint
   const filtered = hasActiveFilters(filters)
 
   function confirmDelete() {
-    if (!deleting) return
+    // Si mientras se borra se cierra el diálogo (Escape) y se abre el de otro
+    // registro, al terminar solo se cierra el de este
+    const target = deleting
+    if (!target) return
     deleteMutation.mutate(
-      { id: deleting.id, vehicleId },
+      { id: target.id, vehicleId },
       {
         onSuccess: () => {
-          toast.success('Mantenimiento eliminado', { description: describe(deleting) })
-          setDeleting(null)
+          toast.success('Mantenimiento eliminado', { description: describe(target) })
+          setDeleting((current) => (current?.id === target.id ? null : current))
         },
-        onError: (error) => toast.error(getErrorMessage(error, 'No se pudo eliminar el mantenimiento.')),
+        onError: (error) => {
+          if (isUnauthorized(error)) return
+          toast.error(getErrorMessage(error, 'No se pudo eliminar el mantenimiento.'))
+        },
       },
     )
   }
@@ -46,7 +53,8 @@ export function MaintenanceHistory({ vehicleId, filters, onClearFilters }: Maint
   let content: ReactNode
   if (query.isPending) {
     content = <LoadingState label="Cargando mantenimientos…" />
-  } else if (query.error) {
+  } else if (!query.data) {
+    // Si falla solo un refresco, se siguen mostrando los datos que ya había
     content = <ErrorState error={query.error} onRetry={() => void query.refetch()} />
   } else if (query.data.length === 0) {
     content = (
@@ -62,9 +70,16 @@ export function MaintenanceHistory({ vehicleId, filters, onClearFilters }: Maint
     )
   } else {
     const listProps = { records: query.data, onEdit: setEditing, onDelete: setDeleting }
+    // Mientras llegan los resultados del filtro nuevo se ven los anteriores: atenuados
+    // y sin un resumen "de lo filtrado" que no corresponde
+    const updating = query.isPlaceholderData
     content = (
-      <div className="space-y-4">
-        <HistorySummary summary={summarizeMaintenance(query.data)} filtered={filtered} />
+      <div className={cn('space-y-4', updating && 'pointer-events-none opacity-60 transition-opacity')} aria-busy={updating || undefined}>
+        {updating ? (
+          <LoadingState label="Aplicando filtros…" className="py-3" />
+        ) : (
+          <HistorySummary summary={summarizeMaintenance(query.data)} filtered={filtered} />
+        )}
         <MaintenanceCards {...listProps} />
         <MaintenanceTable {...listProps} />
       </div>
@@ -80,7 +95,7 @@ export function MaintenanceHistory({ vehicleId, filters, onClearFilters }: Maint
           <MaintenanceForm
             vehicleId={vehicleId}
             record={editing}
-            onSaved={() => setEditing(null)}
+            onSaved={(saved) => setEditing((current) => (current?.id === saved.id ? null : current))}
             onCancel={() => setEditing(null)}
           />
         )}
@@ -90,7 +105,7 @@ export function MaintenanceHistory({ vehicleId, filters, onClearFilters }: Maint
         open={deleting !== null}
         onClose={() => setDeleting(null)}
         onConfirm={confirmDelete}
-        loading={deleteMutation.isPending}
+        loading={deleteMutation.isPending && deleteMutation.variables?.id === deleting?.id}
         title="¿Eliminar este mantenimiento?"
         description={
           deleting && (
@@ -128,7 +143,8 @@ function MaintenanceCards({ records, onEdit, onDelete }: ListProps) {
               {record.notes && <p className="mt-0.5 line-clamp-2 text-sm text-fg-2">{record.notes}</p>}
               <div className="mt-1 flex items-center justify-between gap-2">
                 <p className="text-sm text-fg-2">
-                  {formatDate(record.date)} · <span className="tabular-nums">{formatMiles(record.mileage)}</span>
+                  {formatDate(record.date)} ·{' '}
+                  <span className="whitespace-nowrap tabular-nums">{formatMiles(record.mileage)}</span>
                 </p>
                 <div className="-my-1.5 -mr-1.5">
                   <RecordActions

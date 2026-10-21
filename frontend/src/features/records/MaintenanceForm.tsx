@@ -1,12 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
 import { Field, Input, Textarea } from '../../components/ui/Field'
-import { formatDate, formatMiles, todayISO } from '../../lib/format'
+import { isUnauthorized } from '../../lib/api'
+import { formatDate, formatMiles } from '../../lib/format'
 import { parseDecimalInput, parseIntegerInput } from '../../lib/forms'
+import { useToday } from '../../lib/hooks'
 import { useCreateMaintenance, useUpdateMaintenance } from '../../lib/queries'
 import type { MaintenanceRecord, MaintenanceType } from '../../lib/types'
 import { FormFooter, UnitInput } from '../../components/ui/FormParts'
@@ -54,11 +56,23 @@ export function MaintenanceForm({
     handleSubmit,
     reset,
     setError,
+    getValues,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<MaintenanceFormValues, unknown, MaintenanceFormOutput>({
     resolver: zodResolver(maintenanceSchema),
     defaultValues: maintenanceDefaults(record, defaultType),
   })
+
+  // Si la app sigue abierta al pasar la medianoche, la fecha propuesta pasa a hoy
+  // (solo al registrar y si el usuario no la cambió)
+  const today = useToday()
+  const autoDate = useRef(today)
+  useEffect(() => {
+    if (autoDate.current === today) return
+    if (!record && getValues('date') === autoDate.current) setValue('date', today)
+    autoDate.current = today
+  }, [today, record, getValues, setValue])
 
   async function onSubmit(values: MaintenanceFormOutput) {
     setFormError(null)
@@ -79,9 +93,9 @@ export function MaintenanceForm({
       setLastSaved(saved)
       onSaved?.(saved)
     } catch (error) {
-      const message = serverErrorMessage(error, setError, FIELDS, 'No se pudo guardar el mantenimiento.')
-      setFormError(message)
-      toast.error(message)
+      if (isUnauthorized(error)) return // AuthProvider ya avisa y lleva al login
+      // El error queda junto al botón (role=alert); un toast lo repetiría
+      setFormError(serverErrorMessage(error, setError, FIELDS, 'No se pudo guardar el mantenimiento.'))
     }
   }
 
@@ -96,7 +110,7 @@ export function MaintenanceForm({
           <Input
             id={`${id}-date`}
             type="date"
-            max={todayISO()}
+            max={today}
             invalid={Boolean(errors.date)}
             aria-describedby={describedBy(`${id}-date`, errors.date?.message)}
             {...register('date')}

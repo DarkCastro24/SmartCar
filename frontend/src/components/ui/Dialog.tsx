@@ -21,6 +21,9 @@ interface DialogProps {
 export function Dialog({ open, onClose, title, description, children, className }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null)
   const titleId = useId()
+  // Arrastrar desde un campo y soltar fuera también manda el click al <dialog>:
+  // solo se cierra si el clic empezó en el fondo
+  const pressedOnBackdrop = useRef(false)
 
   useEffect(() => {
     const dialog = ref.current
@@ -42,8 +45,12 @@ export function Dialog({ open, onClose, title, description, children, className 
         event.preventDefault()
         onClose()
       }}
+      onPointerDown={(event) => {
+        pressedOnBackdrop.current = event.target === event.currentTarget
+      }}
       onClick={(event) => {
-        if (event.target === ref.current) onClose()
+        if (pressedOnBackdrop.current && event.target === event.currentTarget) onClose()
+        pressedOnBackdrop.current = false
       }}
       className={cn(
         'm-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg overflow-y-auto rounded-2xl border border-border bg-surface p-0 text-fg shadow-xl',
@@ -59,7 +66,7 @@ export function Dialog({ open, onClose, title, description, children, className 
               </h2>
               {description && <p className="mt-1 text-sm text-fg-2">{description}</p>}
             </div>
-            <Button variant="ghost" size="sm" className="-mr-2 -mt-1 px-2" onClick={onClose} aria-label="Cerrar">
+            <Button variant="ghost" size="md" className="-mr-2 -mt-1 w-11 px-0" onClick={onClose} aria-label="Cerrar">
               <X aria-hidden className="size-5" />
             </Button>
           </div>

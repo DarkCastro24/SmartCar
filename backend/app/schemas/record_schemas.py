@@ -4,13 +4,14 @@ from marshmallow import ValidationError, fields, validate, validates_schema
 
 from app.models import MaintenanceType
 from app.schemas.base import BaseSchema
+from app.services.clock import local_today
 
 MAX_MILEAGE = 2_000_000
 
 
 def not_in_future(value):
-    # Un día de margen por la diferencia de zona horaria con el servidor (UTC)
-    if value > dt.date.today() + dt.timedelta(days=1):
+    # "Hoy" en la zona de la app; un día de margen por si el usuario está en otra zona
+    if value > local_today() + dt.timedelta(days=1):
         raise ValidationError("La fecha no puede estar en el futuro.")
 
 

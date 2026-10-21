@@ -20,7 +20,7 @@ const SIZES: Record<ButtonSize, string> = {
 export function buttonClasses(variant: ButtonVariant = 'primary', size: ButtonSize = 'md', className?: string) {
   return cn(
     'inline-flex shrink-0 items-center justify-center rounded-xl font-medium transition-colors',
-    'disabled:pointer-events-none disabled:opacity-60',
+    'disabled:pointer-events-none disabled:opacity-60 aria-disabled:cursor-wait aria-disabled:opacity-60',
     VARIANTS[variant],
     SIZES[size],
     className,

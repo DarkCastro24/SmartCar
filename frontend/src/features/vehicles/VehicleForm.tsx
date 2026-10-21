@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 
 import { Field, Input } from '../../components/ui/Field'
-import { getErrorMessage } from '../../lib/api'
+import { getErrorMessage, isUnauthorized } from '../../lib/api'
 import { vehicleName } from '../../lib/format'
 import { applyServerErrors, parseIntegerInput } from '../../lib/forms'
 import { useCreateVehicle, useUpdateVehicle } from '../../lib/queries'
@@ -52,6 +52,7 @@ export function VehicleForm({ vehicle, onSaved, onCancel }: VehicleFormProps) {
       toast.success(vehicle ? 'Cambios guardados' : 'Vehículo registrado', { description: vehicleName(saved) })
       onSaved?.(saved)
     } catch (error) {
+      if (isUnauthorized(error)) return // AuthProvider ya avisa y lleva al login
       const applied = applyServerErrors(error, setError, VEHICLE_FIELDS)
       setFormError(applied ? 'Revisa los campos marcados.' : getErrorMessage(error, 'No se pudo guardar el vehículo.'))
     }

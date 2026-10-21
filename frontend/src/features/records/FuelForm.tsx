@@ -1,12 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
 import { Checkbox, Field, Input, Textarea } from '../../components/ui/Field'
-import { formatDate, formatGallons, formatMiles, formatMoney, todayISO } from '../../lib/format'
+import { isUnauthorized } from '../../lib/api'
+import { formatDate, formatGallons, formatMiles, formatMoney } from '../../lib/format'
 import { parseDecimalInput, parseIntegerInput } from '../../lib/forms'
+import { useToday } from '../../lib/hooks'
 import { useCreateFuelLog, useUpdateFuelLog } from '../../lib/queries'
 import type { FuelLog } from '../../lib/types'
 import { FormFooter, UnitInput } from '../../components/ui/FormParts'
@@ -41,11 +43,23 @@ export function FuelForm({ vehicleId, log, currentMileage, onSaved, onCancel }: 
     reset,
     setError,
     control,
+    getValues,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FuelFormValues, unknown, FuelFormOutput>({
     resolver: zodResolver(fuelSchema),
     defaultValues: fuelDefaults(log),
   })
+
+  // Si la app sigue abierta al pasar la medianoche, la fecha propuesta pasa a hoy
+  // (solo al registrar y si el usuario no la cambió)
+  const today = useToday()
+  const autoDate = useRef(today)
+  useEffect(() => {
+    if (autoDate.current === today) return
+    if (!log && getValues('date') === autoDate.current) setValue('date', today)
+    autoDate.current = today
+  }, [today, log, getValues, setValue])
 
   const [gallons, totalCost] = useWatch({ control, name: ['gallons', 'total_cost'] })
   const price = pricePerGallon(gallons, totalCost)
@@ -69,9 +83,9 @@ export function FuelForm({ vehicleId, log, currentMileage, onSaved, onCancel }: 
       setLastSaved(saved)
       onSaved?.(saved)
     } catch (error) {
-      const message = serverErrorMessage(error, setError, FIELDS, 'No se pudo guardar la carga de combustible.')
-      setFormError(message)
-      toast.error(message)
+      if (isUnauthorized(error)) return // AuthProvider ya avisa y lleva al login
+      // El error queda junto al botón (role=alert); un toast lo repetiría
+      setFormError(serverErrorMessage(error, setError, FIELDS, 'No se pudo guardar la carga de combustible.'))
     }
   }
 
@@ -84,7 +98,7 @@ export function FuelForm({ vehicleId, log, currentMileage, onSaved, onCancel }: 
           <Input
             id={`${id}-date`}
             type="date"
-            max={todayISO()}
+            max={today}
             invalid={Boolean(errors.date)}
             aria-describedby={describedBy(`${id}-date`, errors.date?.message)}
             {...register('date')}
@@ -112,7 +126,7 @@ export function FuelForm({ vehicleId, log, currentMileage, onSaved, onCancel }: 
             placeholder="Ej. 9.5"
             invalid={Boolean(errors.gallons)}
             aria-describedby={describedBy(`${id}-gallons`, errors.gallons?.message)}
-            {...register('gallons', { setValueAs: parseDecimalInput })}
+            {...register('gallons', { setValueAs: (value) => parseDecimalInput(value, 3) })}
           />
         </Field>
 

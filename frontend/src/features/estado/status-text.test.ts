@@ -43,9 +43,9 @@ describe('lo que falta en lenguaje natural', () => {
     const byMiles = makeStatusItem({ status: 'vencido', miles_left: -1200, days_left: 20 })
     const byDays = makeStatusItem({ status: 'vencido', miles_left: 3916, days_left: -30 })
     const byBoth = makeStatusItem({ status: 'vencido', miles_left: -150, days_left: -2 })
-    expect(describeRemaining(byMiles)).toBe('Vencido hace 1,200 mi')
+    expect(describeRemaining(byMiles)).toBe('Te pasaste por 1,200 mi')
     expect(describeRemaining(byDays)).toBe('Vencido hace 30 días')
-    expect(describeRemaining(byBoth)).toBe('Vencido hace 150 mi y 2 días')
+    expect(describeRemaining(byBoth)).toBe('Te pasaste por 150 mi y 2 días')
     expect(describeRemaining(makeStatusItem({ status: 'vencido', miles_left: 0, days_left: 10 }))).toBe('Toca hoy')
   })
 
@@ -60,6 +60,19 @@ describe('lo que falta en lenguaje natural', () => {
     expect(describeDue(makeStatusItem())).toBe('Toca el 18 mar 2027 o a las 66,826 mi')
     expect(describeDue(makeStatusItem({ next_due_mileage: null }))).toBe('Toca el 18 mar 2027')
     expect(describeDue(makeStatusItem({ status: 'vencido' }))).toBe('Tocaba el 18 mar 2027 o a las 66,826 mi')
+  })
+
+  it('si ya venció, dice solo el límite que se pasó', () => {
+    const base = { status: 'vencido' as const, next_due_date: '2026-09-18', next_due_mileage: 66700 }
+    // Venció por fecha pero aún le faltan millas: no "o a las 66,700 mi"
+    expect(describeDue(makeStatusItem({ ...base, days_left: -31, miles_left: 3916 }))).toBe('Tocaba el 18 sept 2026')
+    expect(describeDue(makeStatusItem({ ...base, days_left: 20, miles_left: -1200 }))).toBe('Tocaba a las 66,700 mi')
+    expect(describeDue(makeStatusItem({ ...base, days_left: -2, miles_left: -150 }))).toBe(
+      'Tocaba el 18 sept 2026 o a las 66,700 mi',
+    )
+    expect(describeDue(makeStatusItem({ ...base, days_left: null, miles_left: 0, next_due_date: null }))).toBe(
+      'Tocaba a las 66,700 mi',
+    )
   })
 
   it('describe el último mantenimiento y el intervalo', () => {

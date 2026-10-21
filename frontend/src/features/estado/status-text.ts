@@ -62,11 +62,11 @@ export function describeRemaining(item: StatusItem) {
   if (status === 'sin_registro') return 'Registra el último para saber cuándo toca'
 
   if (status === 'vencido') {
-    const overdue = [
-      milesLeft != null && milesLeft < 0 ? formatMiles(-milesLeft) : null,
-      daysLeft != null && daysLeft < 0 ? formatDuration(-daysLeft) : null,
-    ].filter(Boolean)
-    return overdue.length ? `Vencido hace ${overdue.join(' y ')}` : 'Toca hoy'
+    const milesOver = milesLeft != null && milesLeft < 0 ? formatMiles(-milesLeft) : null
+    const daysOver = daysLeft != null && daysLeft < 0 ? formatDuration(-daysLeft) : null
+    // "hace" es para tiempo; con millas: "Te pasaste por 1,200 mi"
+    if (milesOver) return `Te pasaste por ${[milesOver, daysOver].filter(Boolean).join(' y ')}`
+    return daysOver ? `Vencido hace ${daysOver}` : 'Toca hoy'
   }
 
   const left = [
@@ -78,15 +78,25 @@ export function describeRemaining(item: StatusItem) {
   return `${first === 1 ? 'Falta' : 'Faltan'} ${left.join(' o ')}`
 }
 
-/** "Toca el 18 mar 2027 o a las 66,826 mi" (en pasado si ya venció). */
+/**
+ * "Toca el 18 mar 2027 o a las 66,826 mi". Si ya venció, en pasado y solo con el
+ * límite que se pasó: "Tocaba el 18 sept 2026" (no "o a las 66,700 mi" si aún
+ * no llega a esas millas).
+ */
 export function describeDue(item: StatusItem) {
   if (item.status === 'sin_registro') return null
-  const parts = [
-    item.next_due_date ? `el ${formatDate(item.next_due_date)}` : null,
-    item.next_due_mileage != null ? `a las ${formatMiles(item.next_due_mileage)}` : null,
+  const date = item.next_due_date ? `el ${formatDate(item.next_due_date)}` : null
+  const mileage = item.next_due_mileage != null ? `a las ${formatMiles(item.next_due_mileage)}` : null
+  if (item.status !== 'vencido') {
+    const parts = [date, mileage].filter(Boolean)
+    return parts.length ? `Toca ${parts.join(' o ')}` : null
+  }
+  const passed = [
+    item.days_left != null && item.days_left <= 0 ? date : null,
+    item.miles_left != null && item.miles_left <= 0 ? mileage : null,
   ].filter(Boolean)
-  if (!parts.length) return null
-  return `${item.status === 'vencido' ? 'Tocaba' : 'Toca'} ${parts.join(' o ')}`
+  const parts = passed.length ? passed : [date, mileage].filter(Boolean)
+  return parts.length ? `Tocaba ${parts.join(' o ')}` : null
 }
 
 /** "1 vencido · 1 próximo" o "Todo al día" */

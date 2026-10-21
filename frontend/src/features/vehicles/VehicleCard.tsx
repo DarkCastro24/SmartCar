@@ -1,5 +1,5 @@
 import { CalendarClock, Car, Check, CircleCheck, Pencil, Trash2 } from 'lucide-react'
-import { useId } from 'react'
+import { useId, useRef } from 'react'
 
 import { Button } from '../../components/ui/Button'
 import { cn } from '../../components/ui/cn'
@@ -18,6 +18,7 @@ interface VehicleCardProps {
 
 export function VehicleCard({ vehicle, active, onUse, onEdit, onIntervals, onDelete }: VehicleCardProps) {
   const titleId = useId()
+  const titleRef = useRef<HTMLHeadingElement>(null)
   const name = vehicleName(vehicle)
 
   return (
@@ -32,7 +33,12 @@ export function VehicleCard({ vehicle, active, onUse, onEdit, onIntervals, onDel
         <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary-text">
           <Car aria-hidden className="size-6" />
         </span>
-        <h2 id={titleId} className="min-w-0 flex-1 text-base font-semibold break-words text-fg">
+        <h2
+          ref={titleRef}
+          id={titleId}
+          tabIndex={-1}
+          className="min-w-0 flex-1 text-base font-semibold break-words text-fg focus:outline-none"
+        >
           {name}
         </h2>
         {active ? (
@@ -41,7 +47,15 @@ export function VehicleCard({ vehicle, active, onUse, onEdit, onIntervals, onDel
             Activo
           </span>
         ) : (
-          <Button variant="secondary" onClick={onUse} icon={<Check aria-hidden className="size-4" />}>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              onUse()
+              // El botón se cambia por la insignia "Activo": el foco pasa al título para no perderse
+              titleRef.current?.focus()
+            }}
+            icon={<Check aria-hidden className="size-4" />}
+          >
             Usar este<span className="sr-only"> vehículo: {name}</span>
           </Button>
         )}
@@ -53,7 +67,7 @@ export function VehicleCard({ vehicle, active, onUse, onEdit, onIntervals, onDel
         <Detail label="Millaje inicial" value={formatMiles(vehicle.initial_mileage)} />
       </dl>
 
-      <div className="mt-auto flex gap-2 pt-4">
+      <div className="mt-auto flex flex-wrap gap-2 pt-4">
         <Button variant="secondary" className="flex-1 sm:flex-none" onClick={onEdit} icon={<Pencil aria-hidden className="size-4" />}>
           Editar<span className="sr-only"> {name}</span>
         </Button>
