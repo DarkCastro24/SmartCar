@@ -1,9 +1,11 @@
-from flask import Blueprint, current_app, request
+from flask import Blueprint, request
 from flask_jwt_extended import current_user, jwt_required
 
+from app.container import services
 from app.models import DEFAULT_INTERVALS, MAINTENANCE_LABELS, MaintenanceType
 from app.routes.helpers import load_body
 from app.schemas import MaintenanceFilterSchema, MaintenanceSchema
+from app.serializers import maintenance_json
 
 maintenance_bp = Blueprint("maintenance", __name__, url_prefix="/api")
 maintenance_schema = MaintenanceSchema()
@@ -28,33 +30,33 @@ def maintenance_types():
 @jwt_required()
 def list_maintenance(vehicle_id):
     filters = filter_schema.load(request.args)  # ?type=&from=&to=
-    records = current_app.maintenance_service.list(current_user.id, vehicle_id, **filters)
-    return [record.to_dict() for record in records]
+    records = services().maintenance.list(current_user.id, vehicle_id, **filters)
+    return [maintenance_json(record) for record in records]
 
 
 @maintenance_bp.post("/vehicles/<int:vehicle_id>/maintenance")
 @jwt_required()
 def create_maintenance(vehicle_id):
     data = load_body(maintenance_schema)
-    record = current_app.maintenance_service.create(current_user.id, vehicle_id, data)
-    return record.to_dict(), 201
+    record = services().maintenance.create(current_user.id, vehicle_id, data)
+    return maintenance_json(record), 201
 
 
 @maintenance_bp.get("/maintenance/<int:record_id>")
 @jwt_required()
 def get_maintenance(record_id):
-    return current_app.maintenance_service.get(current_user.id, record_id).to_dict()
+    return maintenance_json(services().maintenance.get(current_user.id, record_id))
 
 
 @maintenance_bp.put("/maintenance/<int:record_id>")
 @jwt_required()
 def update_maintenance(record_id):
     data = load_body(maintenance_schema, partial=True)
-    return current_app.maintenance_service.update(current_user.id, record_id, data).to_dict()
+    return maintenance_json(services().maintenance.update(current_user.id, record_id, data))
 
 
 @maintenance_bp.delete("/maintenance/<int:record_id>")
 @jwt_required()
 def delete_maintenance(record_id):
-    current_app.maintenance_service.delete(current_user.id, record_id)
+    services().maintenance.delete(current_user.id, record_id)
     return {"msg": "Mantenimiento eliminado"}

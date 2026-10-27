@@ -1,5 +1,6 @@
 import click
 
+from app.container import services
 from app.services.demo_data import create_demo_vehicle
 
 
@@ -11,8 +12,8 @@ def register_commands(app):
 
         Uso: flask dev-token tu_correo@gmail.com
         """
-        user = app.auth_service.get_or_create_user(email)
-        token = app.auth_service.create_token(user)
+        user = services(app).auth.get_or_create_user(email)
+        token = services(app).auth.create_token(user)
         click.echo(f"Usuario: {user.email} (id {user.id})")
         click.echo(f"Authorization: Bearer {token}")
 
@@ -23,7 +24,7 @@ def register_commands(app):
 
         Uso: flask seed-demo tu_correo@gmail.com
         """
-        user = app.auth_service.get_or_create_user(email)
+        user = services(app).auth.get_or_create_user(email)
         vehicle = create_demo_vehicle(user)
         click.echo(
             f"Listo: vehículo {vehicle.id} ({vehicle.make} {vehicle.model}) con "

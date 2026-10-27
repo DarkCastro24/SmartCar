@@ -2,6 +2,7 @@ import pytest
 
 from app import create_app
 from app.config import TestConfig
+from app.container import services
 from app.extensions import db
 
 
@@ -25,8 +26,8 @@ def make_user(app):
     """Crea un usuario y devuelve (usuario, headers con su token)."""
 
     def _make(email="diego@example.com"):
-        user = app.auth_service.get_or_create_user(email)
-        token = app.auth_service.create_token(user)
+        user = services(app).auth.get_or_create_user(email)
+        token = services(app).auth.create_token(user)
         return user, {"Authorization": f"Bearer {token}"}
 
     return _make

@@ -6,7 +6,7 @@ from sqlalchemy import ForeignKey, Numeric, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.extensions import db
-from app.models.common import TimestampMixin, iso, money
+from app.models.common import TimestampMixin
 
 if TYPE_CHECKING:  # solo para el editor y linters; evita imports circulares
     from app.models.vehicle import Vehicle
@@ -29,20 +29,3 @@ class FuelLog(TimestampMixin, db.Model):
     notes: Mapped[str | None] = mapped_column(Text)
 
     vehicle: Mapped["Vehicle"] = relationship(back_populates="fuel_logs")
-
-    def to_dict(self):
-        price = None
-        if self.total_cost is not None and self.gallons:
-            price = round(float(self.total_cost) / float(self.gallons), 3)
-        return {
-            "id": self.id,
-            "vehicle_id": self.vehicle_id,
-            "date": iso(self.date),
-            "mileage": self.mileage,
-            "gallons": float(self.gallons),
-            "total_cost": money(self.total_cost),
-            "price_per_gallon": price,
-            "full_tank": self.full_tank,
-            "notes": self.notes,
-            "created_at": iso(self.created_at),
-        }

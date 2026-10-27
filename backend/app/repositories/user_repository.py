@@ -4,8 +4,8 @@ from app.models import User
 from app.repositories.base import BaseRepository
 
 
-class UserRepository(BaseRepository):
+class UserRepository(BaseRepository[User]):
     model = User
 
-    def get_by_email(self, email):
+    def get_by_email(self, email: str) -> User | None:
         return self.session.scalars(select(User).where(User.email == email)).first()

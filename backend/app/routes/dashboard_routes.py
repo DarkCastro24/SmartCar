@@ -1,6 +1,7 @@
-from flask import Blueprint, abort, current_app, request
+from flask import Blueprint, abort, request
 from flask_jwt_extended import current_user, jwt_required
 
+from app.container import services
 from app.models import MaintenanceType
 from app.schemas import IntervalSchema
 
@@ -13,20 +14,20 @@ intervals_schema = IntervalSchema(many=True)
 @jwt_required()
 def vehicle_status(vehicle_id):
     """Estado general: semáforo de cada componente y rendimiento actual."""
-    return current_app.dashboard_service.status(current_user.id, vehicle_id)
+    return services().dashboard.status(current_user.id, vehicle_id)
 
 
 @dashboard_bp.get("/stats")
 @jwt_required()
 def vehicle_stats(vehicle_id):
     """Datos para comparar rendimientos: MPG, gastos y duración de cada cambio."""
-    return current_app.dashboard_service.stats(current_user.id, vehicle_id)
+    return services().dashboard.stats(current_user.id, vehicle_id)
 
 
 @dashboard_bp.get("/intervals")
 @jwt_required()
 def list_intervals(vehicle_id):
-    return current_app.interval_service.list(current_user.id, vehicle_id)
+    return services().intervals.list(current_user.id, vehicle_id)
 
 
 @dashboard_bp.put("/intervals")
@@ -37,7 +38,7 @@ def save_intervals(vehicle_id):
     if not isinstance(data, list):
         abort(400, description="Envía una lista de intervalos")
     items = intervals_schema.load(data)
-    return current_app.interval_service.save(current_user.id, vehicle_id, items)
+    return services().intervals.save(current_user.id, vehicle_id, items)
 
 
 @dashboard_bp.delete("/intervals/<maintenance_type>")
@@ -48,4 +49,4 @@ def reset_interval(vehicle_id, maintenance_type):
         mtype = MaintenanceType(maintenance_type)
     except ValueError:
         abort(404, description="Tipo de mantenimiento no encontrado")
-    return current_app.interval_service.reset(current_user.id, vehicle_id, mtype)
+    return services().intervals.reset(current_user.id, vehicle_id, mtype)

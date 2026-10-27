@@ -46,10 +46,17 @@ def test_intervalos_personalizados(client, auth_headers, vehicle_id):
     add(client, auth_headers, vehicle_id, "fuel", date=days_ago(1), mileage=44500, gallons=10)
     url = f"/api/vehicles/{vehicle_id}/intervals"
 
-    saved = client.put(url, json=[{"type": "oil_change", "every_miles": 10000, "every_months": 12}], headers=auth_headers)
+    payload = [{"type": "oil_change", "every_miles": 10000, "every_months": 12}]
+    saved = client.put(url, json=payload, headers=auth_headers)
     assert saved.status_code == 200
     oil = next(i for i in saved.get_json() if i["type"] == "oil_change")
-    assert oil == {"type": "oil_change", "label": "Cambio de aceite", "every_miles": 10000, "every_months": 12, "is_custom": True}
+    assert oil == {
+        "type": "oil_change",
+        "label": "Cambio de aceite",
+        "every_miles": 10000,
+        "every_months": 12,
+        "is_custom": True,
+    }
 
     status = client.get(f"/api/vehicles/{vehicle_id}/status", headers=auth_headers).get_json()
     assert by_type(status)["oil_change"]["status"] == "al_dia"  # 4,500 de 10,000

@@ -27,5 +27,5 @@ def app_timezone():
 
 def local_today(now=None):
     """Hoy en la zona horaria de la app (APP_TIMEZONE)."""
-    now = now or dt.datetime.now(dt.timezone.utc)
+    now = now or dt.datetime.now(dt.UTC)
     return now.astimezone(app_timezone()).date()

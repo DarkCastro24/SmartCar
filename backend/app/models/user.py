@@ -5,7 +5,7 @@ from sqlalchemy import DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.extensions import db
-from app.models.common import TimestampMixin, iso
+from app.models.common import TimestampMixin
 
 if TYPE_CHECKING:  # solo para el editor y linters; evita imports circulares
     from app.models.vehicle import Vehicle
@@ -24,12 +24,3 @@ class User(TimestampMixin, db.Model):
     vehicles: Mapped[list["Vehicle"]] = relationship(
         back_populates="owner", cascade="all, delete-orphan"
     )
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "email": self.email,
-            "name": self.name,
-            "picture": self.picture,
-            "created_at": iso(self.created_at),
-        }

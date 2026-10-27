@@ -4,7 +4,7 @@ from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.extensions import db
-from app.models.common import TimestampMixin, iso
+from app.models.common import TimestampMixin
 
 if TYPE_CHECKING:  # solo para el editor y linters; evita imports circulares
     from app.models.fuel import FuelLog
@@ -35,15 +35,3 @@ class Vehicle(TimestampMixin, db.Model):
     intervals: Mapped[list["MaintenanceInterval"]] = relationship(
         back_populates="vehicle", cascade="all, delete-orphan"
     )
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "make": self.make,
-            "model": self.model,
-            "year": self.year,
-            "plate": self.plate,
-            "color": self.color,
-            "initial_mileage": self.initial_mileage,
-            "created_at": iso(self.created_at),
-        }

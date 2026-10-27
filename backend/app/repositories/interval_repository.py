@@ -4,7 +4,7 @@ from app.models import MaintenanceInterval
 from app.repositories.base import BaseRepository
 
 
-class IntervalRepository(BaseRepository):
+class IntervalRepository(BaseRepository[MaintenanceInterval]):
     model = MaintenanceInterval
 
     def by_type(self, vehicle_id):
@@ -13,7 +13,7 @@ class IntervalRepository(BaseRepository):
         return {interval.type: interval for interval in self.session.scalars(stmt)}
 
     def save_many(self, vehicle_id, items):
-        """Crea o actualiza varios intervalos en una sola transacción."""
+        """Crea o actualiza varios intervalos (el servicio confirma la transacción)."""
         existing = self.by_type(vehicle_id)
         for item in items:
             interval = existing.get(item["type"]) or MaintenanceInterval(
@@ -23,4 +23,4 @@ class IntervalRepository(BaseRepository):
             interval.every_months = item["every_months"]
             self.session.add(interval)
             existing[item["type"]] = interval
-        self.session.commit()
+        self.session.flush()

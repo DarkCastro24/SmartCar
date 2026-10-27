@@ -8,43 +8,63 @@ Flask-JWT-Extended · google-auth · marshmallow · pytest
 
 ---
 
-## 1. Cómo está organizado
+## 1. Arquitectura
 
-Cada petición pasa por capas. Cada una tiene un solo trabajo:
+Arquitectura en capas: cada una tiene un solo trabajo y solo conoce a la de abajo.
 
 ```
 Petición HTTP
    │
    ▼
-routes/        Recibe la petición y valida los datos con schemas/
+routes/         Capa web: lee la petición, valida con schemas/ y responde con serializers.py
    │
    ▼
-services/      Reglas de negocio (dueño del carro, odómetro, cálculos)
+services/       Casos de uso y reglas de negocio. No saben nada de HTTP ni de Flask
+   │            (lanzan errores de domain/errors.py, controlan su transacción)
+   ▼
+repositories/   Acceso a datos: consultas SQL, sin commit
    │
    ▼
-repositories/  Consultas a la base de datos
-   │
-   ▼
-models/        Tablas (SQLAlchemy)
+models/         Tablas (SQLAlchemy 2)
 ```
+
+### Patrones y por qué se usan
+
+| Patrón | Dónde | Para qué |
+|---|---|---|
+| **Application Factory** | `app/__init__.py` | Crear la app con distinta configuración (producción, pruebas con SQLite en memoria). |
+| **Repository** (genérico) | `repositories/base.py`, `record_repository.py` | Aislar las consultas. Mantenimientos y combustible comparten la misma consulta del odómetro. |
+| **Unit of Work** | `repositories/unit_of_work.py` | El servicio decide cuándo se confirma: un caso de uso con varios pasos se guarda completo o no se guarda nada. |
+| **Service Layer** | `services/` | Las reglas de negocio viven en un solo lugar, sin depender de HTTP. |
+| **Inyección de dependencias** + raíz de composición | `container.py` | Cada servicio recibe sus repositorios por constructor. Las pruebas arman servicios con repositorios falsos, sin base de datos (`tests/test_services_unit.py`). |
+| **Errores de dominio** | `domain/errors.py` → `errors.py` | Los servicios lanzan `NotFoundError` u `OdometerConflictError`; solo la capa web los traduce a 404 o 400. |
+| **Read model** | `services/dashboard_service.py` | El estado general y las estadísticas son consultas de solo lectura armadas para la pantalla. |
+| **Núcleo funcional** | `services/calculations.py` | Los cálculos (estado, MPG, costos) son funciones puras, fáciles de probar. |
+| **DTO de entrada / salida** | `schemas/` y `serializers.py` | Validar lo que entra y dar formato a lo que sale, sin mezclarlo con los modelos. |
+
+### Carpetas
 
 ```
 backend/
 ├── app/
 │   ├── __init__.py         create_app(): arma la aplicación
+│   ├── container.py        Crea y conecta repositorios y servicios (inyección de dependencias)
 │   ├── config.py           Lee la configuración del archivo .env
 │   ├── extensions.py       db, migrate, jwt, cors
 │   ├── security.py         Mensajes de error del token y current_user
-│   ├── errors.py           Todos los errores responden JSON {"msg": ...}
+│   ├── errors.py           Traduce errores a JSON {"msg": ...} con su código HTTP
+│   ├── serializers.py      Formato JSON de cada modelo
 │   ├── commands.py         flask dev-token y flask seed-demo
+│   ├── domain/             Errores de negocio
 │   ├── models/             User, Vehicle, MaintenanceRecord, FuelLog, MaintenanceInterval
 │   ├── schemas/            Validación de datos de entrada (marshmallow)
-│   ├── repositories/       Consultas SQL
-│   ├── services/           Lógica: auth, vehículos, registros, estado y estadísticas
+│   ├── repositories/       Consultas SQL y Unit of Work
+│   ├── services/           Casos de uso: auth, vehículos, registros, intervalos, estado
 │   └── routes/             Endpoints (blueprints)
 ├── migrations/             Historial de cambios de la base de datos (Alembic)
-├── tests/                  Pruebas con pytest
+├── tests/                  Pruebas unitarias (sin base de datos) y de integración (API completa)
 ├── api.http                Peticiones de ejemplo para probar la API
+├── pyproject.toml          Configuración de ruff (estilo y errores comunes)
 ├── .env.example            Plantilla de configuración
 └── wsgi.py                 Punto de entrada
 ```
@@ -96,9 +116,10 @@ Luego abre `api.http` en VS Code con la extensión **REST Client**, pega el toke
 y pulsa "Send Request" en cada petición. También puedes usar Postman con el
 header `Authorization: Bearer <token>`.
 
-### 2.5 Pruebas automáticas
+### 2.5 Pruebas automáticas y estilo
 ```powershell
-pytest
+pytest        # 49 pruebas: unitarias e integración
+ruff check .  # estilo y errores comunes
 ```
 
 ---

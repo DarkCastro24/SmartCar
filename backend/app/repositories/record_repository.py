@@ -1,10 +1,14 @@
+from typing import TypeVar
+
 from sqlalchemy import and_, func, or_, select
 
 from app.models import FuelLog, MaintenanceRecord, Vehicle
 from app.repositories.base import BaseRepository
 
+Record = TypeVar("Record", MaintenanceRecord, FuelLog)
 
-class VehicleRecordRepository(BaseRepository):
+
+class VehicleRecordRepository(BaseRepository[Record]):
     """Consultas comunes para registros de un vehículo (mantenimientos y combustible)."""
 
     def get_for_user(self, record_id, user_id):
@@ -54,7 +58,7 @@ class VehicleRecordRepository(BaseRepository):
         return self.session.scalar(stmt)
 
 
-class MaintenanceRepository(VehicleRecordRepository):
+class MaintenanceRepository(VehicleRecordRepository[MaintenanceRecord]):
     model = MaintenanceRecord
 
     def latest_by_type(self, vehicle_id):
@@ -65,5 +69,5 @@ class MaintenanceRepository(VehicleRecordRepository):
         return latest
 
 
-class FuelRepository(VehicleRecordRepository):
+class FuelRepository(VehicleRecordRepository[FuelLog]):
     model = FuelLog

@@ -1,6 +1,10 @@
+import datetime as dt
 from collections import Counter
+from typing import Any
 
-from app.models import MAINTENANCE_LABELS, MaintenanceType
+from app.models import MAINTENANCE_LABELS, MaintenanceType, Vehicle
+from app.repositories import FuelRepository, MaintenanceRepository
+from app.serializers import maintenance_json, vehicle_json
 from app.services.calculations import (
     ALL_STATUSES,
     average_mpg,
@@ -12,18 +16,31 @@ from app.services.calculations import (
     overall_status,
 )
 from app.services.clock import local_today
+from app.services.interval_service import IntervalService
+from app.services.vehicle_service import VehicleService
 
 
 class DashboardService:
-    """Datos para la sección "Estado general" y las gráficas de rendimiento."""
+    """Datos para la sección "Estado general" y las gráficas de rendimiento.
 
-    def __init__(self, vehicle_service, interval_service, maintenance_repository, fuel_repository):
-        self.vehicles = vehicle_service
-        self.intervals = interval_service
-        self.maintenance = maintenance_repository
-        self.fuel = fuel_repository
+    Es un servicio de solo lectura (read model): arma respuestas listas para la
+    pantalla a partir de varios repositorios y de los cálculos puros de
+    calculations.py. Nunca modifica datos.
+    """
 
-    def current_mileage(self, vehicle):
+    def __init__(
+        self,
+        vehicles: VehicleService,
+        intervals: IntervalService,
+        maintenance: MaintenanceRepository,
+        fuel: FuelRepository,
+    ):
+        self.vehicles = vehicles
+        self.intervals = intervals
+        self.maintenance = maintenance
+        self.fuel = fuel
+
+    def current_mileage(self, vehicle: Vehicle) -> int:
         """El millaje actual es la lectura más alta registrada."""
         readings = [
             vehicle.initial_mileage,
@@ -32,7 +49,7 @@ class DashboardService:
         ]
         return max(reading for reading in readings if reading is not None)
 
-    def status(self, user_id, vehicle_id, today=None):
+    def status(self, user_id: int, vehicle_id: int, today: dt.date | None = None) -> dict[str, Any]:
         vehicle = self.vehicles.get(user_id, vehicle_id)
         today = today or local_today()
         mileage = self.current_mileage(vehicle)
@@ -49,7 +66,7 @@ class DashboardService:
                     "label": MAINTENANCE_LABELS[mtype],
                     "every_miles": interval["every_miles"],
                     "every_months": interval["every_months"],
-                    "last": last.to_dict() if last else None,
+                    "last": maintenance_json(last) if last else None,
                     **evaluate_item(
                         last_date=last.date if last else None,
                         last_mileage=last.mileage if last else None,
@@ -64,7 +81,7 @@ class DashboardService:
         counts = Counter(item["status"] for item in items)
         series = mpg_series(self.fuel.list_for_vehicle(vehicle.id, oldest_first=True))
         return {
-            "vehicle": vehicle.to_dict(),
+            "vehicle": vehicle_json(vehicle),
             "current_mileage": mileage,
             "overall": overall_status(counts),
             "summary": {status: counts.get(status, 0) for status in ALL_STATUSES},
@@ -75,7 +92,7 @@ class DashboardService:
             },
         }
 
-    def stats(self, user_id, vehicle_id):
+    def stats(self, user_id: int, vehicle_id: int) -> dict[str, Any]:
         vehicle = self.vehicles.get(user_id, vehicle_id)
         maintenance = self.maintenance.list_for_vehicle(vehicle.id, oldest_first=True)
         fuel = self.fuel.list_for_vehicle(vehicle.id, oldest_first=True)

@@ -7,7 +7,7 @@ from sqlalchemy import Enum, ForeignKey, Numeric, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.extensions import db
-from app.models.common import TimestampMixin, iso, money
+from app.models.common import TimestampMixin
 
 if TYPE_CHECKING:  # solo para el editor y linters; evita imports circulares
     from app.models.vehicle import Vehicle
@@ -66,19 +66,6 @@ class MaintenanceRecord(TimestampMixin, db.Model):
     notes: Mapped[str | None] = mapped_column(Text)
 
     vehicle: Mapped["Vehicle"] = relationship(back_populates="maintenance_records")
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "vehicle_id": self.vehicle_id,
-            "type": self.type.value,
-            "label": MAINTENANCE_LABELS[self.type],
-            "date": iso(self.date),
-            "mileage": self.mileage,
-            "cost": money(self.cost),
-            "notes": self.notes,
-            "created_at": iso(self.created_at),
-        }
 
 
 class MaintenanceInterval(db.Model):

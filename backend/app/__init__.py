@@ -4,11 +4,11 @@ from flask import Flask
 from app import models  # noqa: F401  (registra las tablas para las migraciones)
 from app.commands import register_commands
 from app.config import Config
+from app.container import init_services
 from app.errors import register_error_handlers
 from app.extensions import cors, db, jwt, migrate
 from app.routes import register_blueprints
 from app.security import register_jwt_callbacks
-from app.services import register_services
 
 
 def create_app(config_class=Config):
@@ -28,7 +28,7 @@ def create_app(config_class=Config):
     # 2. Errores en JSON, tokens, servicios, rutas y comandos
     register_error_handlers(app)
     register_jwt_callbacks()
-    register_services(app)
+    init_services(app)
     register_blueprints(app)
     register_commands(app)
 

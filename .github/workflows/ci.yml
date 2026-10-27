@@ -8,7 +8,7 @@ on:
 
 jobs:
   backend:
-    name: Backend (pytest)
+    name: Backend (ruff y pytest)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -21,6 +21,7 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements*.txt
       - run: pip install -r requirements-dev.txt
+      - run: ruff check .
       - run: pytest
 
   frontend:
