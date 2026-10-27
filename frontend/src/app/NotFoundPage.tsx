@@ -10,6 +10,7 @@ export default function NotFoundPage() {
   return (
     <EmptyState
       icon={MapPinOff}
+      asPageHeading
       title="Esta página no existe"
       description="Revisa la dirección o vuelve al estado general de tu vehículo."
       action={

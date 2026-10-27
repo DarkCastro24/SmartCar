@@ -61,13 +61,18 @@ export function AppLayout() {
                 to={item.to}
                 className={({ isActive }) =>
                   cn(
-                    'flex flex-col items-center gap-1 py-2.5 text-xs font-medium transition-colors',
-                    isActive ? 'text-primary-text' : 'text-fg-2 hover:text-fg',
+                    'relative flex flex-col items-center gap-1 py-2.5 text-xs transition-colors',
+                    isActive ? 'font-bold text-primary-text' : 'font-medium text-fg-2 hover:text-fg',
                   )
                 }
               >
-                <Icon aria-hidden className="size-6" />
-                {item.shortLabel}
+                {({ isActive }) => (
+                  <>
+                    {isActive && <span aria-hidden className="absolute inset-x-6 top-0 h-0.5 rounded-b bg-primary-text" />}
+                    <Icon aria-hidden className="size-6" />
+                    {item.shortLabel}
+                  </>
+                )}
               </NavLink>
             )
           })}

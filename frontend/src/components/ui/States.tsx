@@ -55,9 +55,12 @@ interface EmptyStateProps {
   description?: ReactNode
   action?: ReactNode
   className?: string
+  /** Úsalo cuando el estado ocupa toda la página y no hay otro h1 */
+  asPageHeading?: boolean
 }
 
-export function EmptyState({ icon: Icon, title, description, action, className }: EmptyStateProps) {
+export function EmptyState({ icon: Icon, title, description, action, className, asPageHeading }: EmptyStateProps) {
+  const Title = asPageHeading ? 'h1' : 'p'
   return (
     <div
       className={cn(
@@ -69,7 +72,7 @@ export function EmptyState({ icon: Icon, title, description, action, className }
         <Icon aria-hidden className="size-6" />
       </span>
       <div>
-        <p className="font-semibold text-fg">{title}</p>
+        <Title className="font-semibold text-fg">{title}</Title>
         {description && <p className="mx-auto mt-1 max-w-sm text-sm text-fg-2">{description}</p>}
       </div>
       {action}

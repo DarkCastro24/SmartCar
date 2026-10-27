@@ -16,7 +16,14 @@ createRoot(document.getElementById('root')!).render(
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <RouterProvider router={router} />
-          <Toaster position="top-center" richColors closeButton theme="system" />
+          <Toaster
+            position="top-center"
+            richColors
+            closeButton
+            theme="system"
+            containerAriaLabel="Avisos"
+            toastOptions={{ closeButtonAriaLabel: 'Cerrar aviso' }}
+          />
         </AuthProvider>
       </QueryClientProvider>
     </GoogleProvider>

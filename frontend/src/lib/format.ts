@@ -29,7 +29,7 @@ export function formatMpg(value: number | null | undefined) {
 
 export function formatGallons(value: number | null | undefined) {
   if (value == null) return EMPTY
-  return `${new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 3 }).format(value)} gal`
+  return `${new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(value)} gal`
 }
 
 /**
