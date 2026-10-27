@@ -1,0 +1,21 @@
+# Configuración de Render (Blueprint): crea la API de SmartCar con un clic.
+# En Render: New → Blueprint → elige este repositorio.
+services:
+  - type: web
+    name: smartcar-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    # Instala dependencias y crea o actualiza las tablas en la base de datos
+    buildCommand: pip install -r requirements.txt && flask db upgrade
+    startCommand: gunicorn wsgi:app
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL # Cadena de conexión de Neon
+        sync: false
+      - key: GOOGLE_CLIENT_ID # Client ID de Google Cloud (puede esperar)
+        sync: false
+      - key: FRONTEND_URL # URL del frontend publicado; mientras tanto http://localhost:5173
+        sync: false
+      - key: JWT_SECRET_KEY # Render genera una clave segura
+        generateValue: true

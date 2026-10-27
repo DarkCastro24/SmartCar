@@ -240,7 +240,7 @@ Revisa el archivo generado antes de aplicarlo.
 
 1. **Base de datos (Neon o Supabase):** crea un proyecto PostgreSQL y copia la cadena de
    conexión. Va tal cual en `DATABASE_URL`; la app la adapta sola.
-2. **API (Render)** → *New Web Service* → conecta tu repositorio y configura:
+2. **API (Render)**: la forma más rápida es *New → Blueprint* y elegir el repositorio; `render.yaml` ya trae todo y solo te pide las variables. A mano sería *New Web Service* con:
    - Root Directory: `backend`
    - Build Command: `pip install -r requirements.txt && flask db upgrade`
    - Start Command: `gunicorn wsgi:app`
